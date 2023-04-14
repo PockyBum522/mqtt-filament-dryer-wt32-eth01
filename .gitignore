@@ -1,0 +1,6 @@
+.pio
+CMakeListsPrivate.txt
+cmake-build-*/ 
+src/*secret*.cpp
+*.log
+/src/secrets/SECRETS.cpp

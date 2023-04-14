@@ -1,0 +1,14 @@
+#ifndef MQTT_THERMOSTAT_WT32_ETH01_THERMOSTAT_FAN_STATES_ENUM_H
+#define MQTT_THERMOSTAT_WT32_ETH01_THERMOSTAT_FAN_STATES_ENUM_H
+
+
+enum FanStates
+{
+    FanUninitialized,
+    FanAlwaysOn,
+    FanOnAutomatically,
+    FanAlwaysOff
+};
+
+
+#endif //MQTT_THERMOSTAT_WT32_ETH01_THERMOSTAT_FAN_STATES_ENUM_H

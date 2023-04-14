@@ -1,0 +1,13 @@
+#ifndef MQTT_THERMOSTAT_WT32_ETH01_THERMOSTAT_CURRENT_TEMPERATURE_STATE_ENUM_H
+#define MQTT_THERMOSTAT_WT32_ETH01_THERMOSTAT_CURRENT_TEMPERATURE_STATE_ENUM_H
+
+
+enum ObservedTemperatureStates
+{
+    ObservedTempUninitialized,
+    ObservedTempAboveSetpointMargin,
+    ObservedTempBelowSetpointMargin
+};
+
+
+#endif //MQTT_THERMOSTAT_WT32_ETH01_THERMOSTAT_CURRENT_TEMPERATURE_STATE_ENUM_H
