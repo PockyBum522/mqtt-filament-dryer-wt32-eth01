@@ -72,7 +72,7 @@ void MqttLogistics::setThermostatSetpoint(String commandString)
 {
     double setpointFloat = std::stod(commandString.c_str());
 
-    _currentThermostatStatus->CurrentSetpoint = setpointFloat;
+    _currentThermostatStatus->Setpoint = setpointFloat;
 }
 
 void MqttLogistics::setThermostatMode(const String &payloadStr)
@@ -241,7 +241,7 @@ void MqttLogistics::updateHomeAssistantWithNewValues()
 
     String currentMode =  ConvertersToString::getThermostatModeAsString(_currentThermostatStatus->ThermostatMode);
 
-    dtostrf(_currentThermostatStatus->CurrentSetpoint, 5, 2, setpointBuffer);
+    dtostrf(_currentThermostatStatus->Setpoint, 5, 2, setpointBuffer);
 
     _mqttClient->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, setpointBuffer);
     _mqttClient->publish(SECRETS::TOPIC_JUST_MODE_PERIPHERAL_OUT, currentMode.c_str());

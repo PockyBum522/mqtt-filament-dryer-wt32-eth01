@@ -26,7 +26,7 @@ void Sht3xHandler::SetCurrentStatusOrError(int shtResponse)
 {
     if (shtResponse == 0)
     {
-        _currentThermostatStatus->CurrentTemperatureFahrenheit = TemperatureFahrenheit;
+        _currentThermostatStatus->TemperatureCelsius = TemperatureFahrenheit;
         _currentThermostatStatus->CurrentHumidity = Humidity;
     }
     else
@@ -39,7 +39,7 @@ void Sht3xHandler::SetCurrentStatusMockValuesIfEnabled()
 {
     if (_currentThermostatStatus->CurrentSettings.UseMockTemperatureSensorData)
     {
-        _currentThermostatStatus->CurrentTemperatureFahrenheit = 1.2;
+        _currentThermostatStatus->TemperatureCelsius = 1.2;
         _currentThermostatStatus->CurrentHumidity = 3.4;
     }
 }

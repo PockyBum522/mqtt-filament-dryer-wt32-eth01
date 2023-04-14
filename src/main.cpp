@@ -11,8 +11,8 @@
 #include "logic/Sht3xHandler.h"
 #include "logic/TemperatureReporter.h"
 #include "logic/DebugMessageSender.h"
-#include "logic/ThermostatStateMachine.h"
 #include "logic/ConvertersToString.h"
+#include "logic/HeaterController.h"
 
 #define DEBUG_ETHERNET_WEBSERVER_PORT Serial
 
@@ -28,10 +28,29 @@ MqttLogistics mqttLogistics = *new MqttLogistics(&currentStatus, &ethernetClient
 auto temperatureReportSender = *new TemperatureReporter(&currentStatus, &mqttLogistics);
 auto debugMqttSender = *new DebugMessageSender(&currentStatus, &mqttLogistics);
 auto temperatureSensorHandler = *new Sht3xHandler(&currentStatus);
-auto hvacController = *new HvacController(&currentStatus, &mqttLogistics);
-auto thermostatStateMachine = *new ThermostatStateMachine(&currentStatus, &hvacController, &mqttLogistics);
+auto hvacController = *new HeaterController(&currentStatus, &mqttLogistics);
 
 void setInitialSettingsAfterDelay();
+
+void managePid();
+
+//Define Variables we'll be connecting to
+double setpoint = 100.0;
+double input = 72.0;
+double output = 0.0;
+
+//Define the aggressive tuning parameters
+double aggressiveKp = 4;
+double aggressiveKi = 0.2;
+double aggressiveKd = 1;
+
+//Define the aggressive tuning parameters
+double conservativeKp = 4;
+double conservativeKi = 0.2;
+double conservativeKd = 1;
+
+//Specify the links and initial tuning parameters
+PID myPID(&input, &output, &setpoint, conservativeKp, conservativeKi, conservativeKd, DIRECT);
 
 void setup()
 {
@@ -51,6 +70,8 @@ void setup()
     digitalWrite(PIN_RELAY_06, HIGH);
 
     Serial.begin(115200);
+
+    myPID.SetMode(AUTOMATIC);
 
     ETH.begin(ETH_PHY_ADDR, ETH_PHY_POWER);
 
@@ -77,33 +98,29 @@ void loop()
     mqttLogistics.reconnectMqttIfNotConnected();
     mqttLogistics.loopClient();
 
-    thermostatStateMachine.loop();
-    hvacController.loopForQueuedCompressorHandling();
-
     temperatureReportSender.SendTemperatureReportEveryTimeout();
     debugMqttSender.SendMqttDebugMessagesEveryTimeout();
 
-    setInitialSettingsAfterDelay(); // Fires once after 30 seconds to set sane settings after brownouts
+    managePid();
 }
 
-void setInitialSettingsAfterDelay()
+void managePid()
 {
-    if (!(millis() > 30000 && !initialSettingsSet))
-        return;
+    input = currentStatus.TemperatureCelsius;
 
-    initialSettingsSet = true;
+    double gap = abs(currentStatus.Setpoint - input); //distance away from setpoint
 
-    currentStatus.ThermostatMode = ModeCooling;
-    currentStatus.FanMode = FanOnAutomatically;
-    currentStatus.CurrentSetpoint = 71.0;
+    if(gap < 10)
+    {
+        //we're close to setpoint, use conservative tuning parameters
+        myPID.SetTunings(conservativeKp, conservativeKi, conservativeKd);
+    }
+    else
+    {
+        //we're far from setpoint, use aggressive tuning parameters
+        myPID.SetTunings(aggressiveKp, aggressiveKi, aggressiveKd);
+    }
 
-    // Update HA with new values
-    char setpointBuffer[7];
-
-    String currentMode =  ConvertersToString::getThermostatModeAsString(currentStatus.ThermostatMode);
-
-    dtostrf(currentStatus.CurrentSetpoint, 5, 2, setpointBuffer);
-
-    mqttLogistics.publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, setpointBuffer);
-    mqttLogistics.publish(SECRETS::TOPIC_JUST_MODE_PERIPHERAL_OUT, currentMode.c_str());
+    myPID.Compute();
+    analogWrite(3, output);
 }

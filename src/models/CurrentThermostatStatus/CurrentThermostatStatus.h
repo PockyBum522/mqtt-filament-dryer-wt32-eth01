@@ -7,7 +7,7 @@
 #include "models/StateEnums/ObservedTemperatureStates.h"
 #include "models/StateEnums/ThermostatModeStates.h"
 
-#include "CurrentThermostatSettings.h"
+#include "CurrentSettings.h"
 
 class CurrentThermostatStatus
 {
@@ -15,16 +15,13 @@ public:
     ThermostatModeStates ThermostatMode = ModeUninitialized;
     FanStates FanMode = FanUninitialized;
 
-    CurrentThermostatSettings CurrentSettings = *new CurrentThermostatSettings();
+    CurrentSettings Settings = *new CurrentSettings();
 
     unsigned long CurrentSeconds = 0;
-    unsigned long LastCompressorOffAtSeconds = 0;                          // This gets set to CurrentSeconds when compressor turns off
 
-    bool CompressorQueuedToTurnOn = false;
-
-    double CurrentTemperatureFahrenheit = 0.0;
+    double TemperatureCelsius = 0.0;
     double CurrentHumidity = 0.0;
-    double CurrentSetpoint = 0.0; // Default to something comfortable in case of brownout
+    double Setpoint = 0.0;
 
 };
 

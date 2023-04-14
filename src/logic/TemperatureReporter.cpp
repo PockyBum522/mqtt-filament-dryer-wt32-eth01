@@ -29,8 +29,8 @@ void TemperatureReporter::SendTemperatureReportEveryTimeout()
 
         String currentMode = ConvertersToString::getThermostatModeAsString(_currentThermostatStatus->ThermostatMode);
 
-        dtostrf(_currentThermostatStatus->CurrentTemperatureFahrenheit, 5, 2, temperatureBuffer);
-        dtostrf(_currentThermostatStatus->CurrentSetpoint, 5, 2, setpointBuffer);
+        dtostrf(_currentThermostatStatus->TemperatureCelsius, 5, 2, temperatureBuffer);
+        dtostrf(_currentThermostatStatus->Setpoint, 5, 2, setpointBuffer);
 
         _mqttLogistics->publish(SECRETS::TOPIC_JUST_TEMPERATURE_PERIPHERAL_OUT, temperatureBuffer);
         _mqttLogistics->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, setpointBuffer);
@@ -49,7 +49,7 @@ std::string TemperatureReporter::SerializeReport()
     StaticJsonDocument<300> jsonDocument;
 
     std::stringstream temperatureStream;
-    temperatureStream << std::fixed << std::setprecision(2) << _currentThermostatStatus->CurrentTemperatureFahrenheit;
+    temperatureStream << std::fixed << std::setprecision(2) << _currentThermostatStatus->TemperatureCelsius;
     std::string outTemperatureString = temperatureStream.str();
 
     std::stringstream humidityStream;
@@ -59,7 +59,7 @@ std::string TemperatureReporter::SerializeReport()
     jsonDocument["TemperatureFahrenheit"] = outTemperatureString;
     jsonDocument["HumidityPercentage"] = outHumidityString;
 
-    jsonDocument["Setpoint"] = _currentThermostatStatus->CurrentSetpoint;
+    jsonDocument["Setpoint"] = _currentThermostatStatus->Setpoint;
 
     jsonDocument["ThermostatMode"] = ConvertersToString::getThermostatModeAsString(_currentThermostatStatus->ThermostatMode);
     jsonDocument["FanMode"] = ConvertersToString::getFanModeAsString(_currentThermostatStatus->FanMode);
