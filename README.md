@@ -1,4 +1,4 @@
-# mqtt-thermostat-wt32-eth01
+# mqtt-filament-dryer-wt32-eth01
 Replacing the brains of a filament dryer to make it network enabled
 
 Parts:
