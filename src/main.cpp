@@ -4,7 +4,7 @@
 #include <sstream>
 #include <ETH.h>
 #include <AsyncElegantOTA.h>
-#include "models/CurrentThermostatStatus/CurrentThermostatStatus.h"
+#include "models/ThermostatStatus/ThermostatStatus.h"
 #include "models/PinDefinitions.h"
 #include "secrets/SECRETS.h"
 #include "logic/MqttLogistics.h"
@@ -12,7 +12,6 @@
 #include "logic/TemperatureReporter.h"
 #include "logic/DebugMessageSender.h"
 #include "logic/ConvertersToString.h"
-#include "logic/HeaterController.h"
 
 #define DEBUG_ETHERNET_WEBSERVER_PORT Serial
 
@@ -21,14 +20,13 @@ bool initialSettingsSet = false;
 AsyncWebServer webServer(80);
 WiFiClient ethernetClient;
 
-CurrentThermostatStatus currentStatus = *new CurrentThermostatStatus();
+ThermostatStatus currentStatus = *new ThermostatStatus();
 
 MqttLogistics mqttLogistics = *new MqttLogistics(&currentStatus, &ethernetClient);
 
 auto temperatureReportSender = *new TemperatureReporter(&currentStatus, &mqttLogistics);
 auto debugMqttSender = *new DebugMessageSender(&currentStatus, &mqttLogistics);
 auto temperatureSensorHandler = *new Sht3xHandler(&currentStatus);
-auto hvacController = *new HeaterController(&currentStatus, &mqttLogistics);
 
 void setInitialSettingsAfterDelay();
 
@@ -50,7 +48,7 @@ double conservativeKi = 0.2;
 double conservativeKd = 1;
 
 //Specify the links and initial tuning parameters
-PID myPID(&input, &output, &setpoint, conservativeKp, conservativeKi, conservativeKd, DIRECT);
+//PID myPID(&input, &output, &setpoint, conservativeKp, conservativeKi, conservativeKd, DIRECT);
 
 void setup()
 {
@@ -71,7 +69,7 @@ void setup()
 
     Serial.begin(115200);
 
-    myPID.SetMode(AUTOMATIC);
+    //myPID.SetMode(AUTOMATIC);
 
     ETH.begin(ETH_PHY_ADDR, ETH_PHY_POWER);
 
@@ -106,21 +104,21 @@ void loop()
 
 void managePid()
 {
-    input = currentStatus.TemperatureCelsius;
-
-    double gap = abs(currentStatus.Setpoint - input); //distance away from setpoint
-
-    if(gap < 10)
-    {
-        //we're close to setpoint, use conservative tuning parameters
-        myPID.SetTunings(conservativeKp, conservativeKi, conservativeKd);
-    }
-    else
-    {
-        //we're far from setpoint, use aggressive tuning parameters
-        myPID.SetTunings(aggressiveKp, aggressiveKi, aggressiveKd);
-    }
-
-    myPID.Compute();
-    analogWrite(3, output);
+//    input = currentStatus.TemperatureCelsius;
+//
+//    double gap = abs(currentStatus.Setpoint - input); //distance away from setpoint
+//
+//    if(gap < 10)
+//    {
+//        //we're close to setpoint, use conservative tuning parameters
+//        myPID.SetTunings(conservativeKp, conservativeKi, conservativeKd);
+//    }
+//    else
+//    {
+//        //we're far from setpoint, use aggressive tuning parameters
+//        myPID.SetTunings(aggressiveKp, aggressiveKi, aggressiveKd);
+//    }
+//
+//    myPID.Compute();
+//    analogWrite(3, output);
 }

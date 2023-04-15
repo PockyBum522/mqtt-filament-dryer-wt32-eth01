@@ -3,11 +3,11 @@
 #include "MqttLogistics.h"
 #include "ConvertersToString.h"
 
-MqttLogistics::MqttLogistics(CurrentThermostatStatus *currentThermostatStatus,
+MqttLogistics::MqttLogistics(ThermostatStatus *thermostatStatus,
                              WiFiClient *client)
 {
     _ethernetClient = client;
-    _currentThermostatStatus = currentThermostatStatus;
+    _thermostatStatus = thermostatStatus;
 
     _mqttClient = new PubSubClient();
 
@@ -24,7 +24,7 @@ void MqttLogistics::onMqttMessageReceived(char* topic, uint8_t* payload, unsigne
     String topicStr = getIncomingTopicAsString(topic);
     String payloadStr = getIncomingPayloadAsString(payload, length);
 
-    if (_currentThermostatStatus->CurrentSettings.DebugModeOn)
+    if (_thermostatStatus->Settings.DebugModeOn)
     {
         String topicMessage = String("Topic was: ") + topicStr;
         String payloadMessage = String("Payload was: ") + payloadStr;
@@ -72,36 +72,36 @@ void MqttLogistics::setThermostatSetpoint(String commandString)
 {
     double setpointFloat = std::stod(commandString.c_str());
 
-    _currentThermostatStatus->Setpoint = setpointFloat;
+    _thermostatStatus->Setpoint = setpointFloat;
 }
 
 void MqttLogistics::setThermostatMode(const String &payloadStr)
 {
-    _lastCommand = payloadStr.c_str();
-
-    if (payloadStr.equalsIgnoreCase("cool"))
-    {
-        _currentThermostatStatus->ThermostatMode = ModeCooling;
-        _currentThermostatStatus->FanMode = FanOnAutomatically;
-    }
-    else if (payloadStr.equalsIgnoreCase("MAINTAIN"))
-    {
-        _currentThermostatStatus->ThermostatMode = ModeMaintainingRange;
-    }
-    else if (payloadStr.equalsIgnoreCase("heat"))
-    {
-        _currentThermostatStatus->ThermostatMode = ModeHeating;
-        _currentThermostatStatus->FanMode = FanOnAutomatically;
-    }
-    else if (payloadStr.equalsIgnoreCase("fan_only"))
-    {
-        _currentThermostatStatus->FanMode = FanAlwaysOn;
-    }
-    else if (payloadStr.equalsIgnoreCase("OFF"))
-    {
-        _currentThermostatStatus->ThermostatMode = ModeOff;
-        _currentThermostatStatus->FanMode = FanOnAutomatically;
-    }
+//    _lastCommand = payloadStr.c_str();
+//
+//    if (payloadStr.equalsIgnoreCase("cool"))
+//    {
+//        _thermostatStatus->ThermostatMode = ModeCooling;
+//        _thermostatStatus->FanMode = FanOnAutomatically;
+//    }
+//    else if (payloadStr.equalsIgnoreCase("MAINTAIN"))
+//    {
+//        _thermostatStatus->ThermostatMode = ModeMaintainingRange;
+//    }
+//    else if (payloadStr.equalsIgnoreCase("heat"))
+//    {
+//        _thermostatStatus->ThermostatMode = ModeHeating;
+//        _thermostatStatus->FanMode = FanOnAutomatically;
+//    }
+//    else if (payloadStr.equalsIgnoreCase("fan_only"))
+//    {
+//        _thermostatStatus->FanMode = FanAlwaysOn;
+//    }
+//    else if (payloadStr.equalsIgnoreCase("OFF"))
+//    {
+//        _thermostatStatus->ThermostatMode = ModeOff;
+//        _thermostatStatus->FanMode = FanOnAutomatically;
+//    }
 }
 
 void MqttLogistics::reconnectMqttIfNotConnected()
@@ -237,12 +237,12 @@ boolean MqttLogistics::isNumeric(String str) {
 
 void MqttLogistics::updateHomeAssistantWithNewValues()
 {
-    char setpointBuffer[7];
-
-    String currentMode =  ConvertersToString::getThermostatModeAsString(_currentThermostatStatus->ThermostatMode);
-
-    dtostrf(_currentThermostatStatus->Setpoint, 5, 2, setpointBuffer);
-
-    _mqttClient->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, setpointBuffer);
-    _mqttClient->publish(SECRETS::TOPIC_JUST_MODE_PERIPHERAL_OUT, currentMode.c_str());
+//    char setpointBuffer[7];
+//
+//    String currentMode =  ConvertersToString::getThermostatModeAsString(_thermostatStatus->ThermostatMode);
+//
+//    dtostrf(_thermostatStatus->Setpoint, 5, 2, setpointBuffer);
+//
+//    _mqttClient->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, setpointBuffer);
+//    _mqttClient->publish(SECRETS::TOPIC_JUST_MODE_PERIPHERAL_OUT, currentMode.c_str());
 }

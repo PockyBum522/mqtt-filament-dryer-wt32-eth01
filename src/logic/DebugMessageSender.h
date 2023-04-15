@@ -1,18 +1,19 @@
 #ifndef MQTT_THERMOSTAT_WT32_ETH01_DEBUG_MESSAGE_SENDER_H
 #define MQTT_THERMOSTAT_WT32_ETH01_DEBUG_MESSAGE_SENDER_H
 
-#include <ArduinoJson.h>                 // PubSubClient - https://pubsubclient.knolleary.net/api
-#include "logic/MqttLogistics.h"
+#include <ArduinoJson.h>
+#include "../models/ThermostatStatus/ThermostatStatus.h"
+#include "MqttLogistics.h"
 
 class DebugMessageSender
 {
 public:
-    explicit DebugMessageSender(CurrentThermostatStatus *currentThermostatStatus, MqttLogistics* mqttLogistics);
+    explicit DebugMessageSender(ThermostatStatus *thermostatStatus, MqttLogistics* mqttLogistics);
 
     void SendMqttDebugMessagesEveryTimeout();
 
 private:
-    CurrentThermostatStatus *_currentThermostatStatus;
+    ThermostatStatus *_thermostatStatus;
     MqttLogistics *_mqttLogistics;
 
     unsigned long _lastDebugOutMessageSentSeconds = 0;

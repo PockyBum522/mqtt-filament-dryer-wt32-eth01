@@ -2,27 +2,24 @@
 #define MQTT_THERMOSTAT_WT32_ETH01_TEMPERATURE_REPORTER_H
 
 #include <ArduinoJson.h>                 // PubSubClient - https://pubsubclient.knolleary.net/api
-#include "models/CurrentThermostatStatus/CurrentThermostatStatus.h"
-#include "logic/MqttLogistics.h"
+#include "MqttLogistics.h"
+#include "../models/ThermostatStatus/ThermostatStatus.h"
 
 class TemperatureReporter
 {
 public:
-    explicit TemperatureReporter(CurrentThermostatStatus* currentThermostatStatus,
+    explicit TemperatureReporter(ThermostatStatus* thermostatStatus,
                                  MqttLogistics* mqttLogistics);
 
     void SendTemperatureReportEveryTimeout();
 
 private:
-    CurrentThermostatStatus* _currentThermostatStatus;
+    ThermostatStatus* _thermostatStatus;
     MqttLogistics* _mqttLogistics;
 
     unsigned long _lastPeripheralOutMessageSentSeconds = 0;
 
     std::string SerializeReport();
-
-    String getThermostatModeAsString(ThermostatModeStates thermostatMode);
-    String getFanModeAsString(FanStates thermostatMode);
 };
 
 

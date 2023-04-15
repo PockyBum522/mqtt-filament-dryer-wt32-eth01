@@ -3,12 +3,12 @@
 
 #include <WiFiClient.h>
 #include <PubSubClient.h>
-#include "models/CurrentThermostatStatus/CurrentThermostatStatus.h"
+#include "models/ThermostatStatus/ThermostatStatus.h"
 
 class MqttLogistics
 {
 public:
-    explicit MqttLogistics(CurrentThermostatStatus *currentThermostatStatus, WiFiClient *client);
+    explicit MqttLogistics(ThermostatStatus *thermostatStatus, WiFiClient *client);
 
     void onMqttMessageReceived(char* topic, uint8_t* payload, unsigned int length);
 
@@ -21,7 +21,7 @@ public:
     std::string getLastCommand();
 
 private:
-    CurrentThermostatStatus *_currentThermostatStatus;
+    ThermostatStatus *_thermostatStatus;
     WiFiClient *_ethernetClient;
     PubSubClient *_mqttClient;
 

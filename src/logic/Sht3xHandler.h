@@ -9,12 +9,12 @@
 #endif
 
 #include "Wire.h"
-#include "models/CurrentThermostatStatus/CurrentThermostatStatus.h"
+#include "../models/ThermostatStatus/ThermostatStatus.h"
 
 class Sht3xHandler
 {
 public:
-	explicit Sht3xHandler(CurrentThermostatStatus *currentThermostatStatus);
+	explicit Sht3xHandler(ThermostatStatus *thermostatStatus);
 
 	float TemperatureCelsius = 0;
 	float TemperatureFahrenheit = 0;
@@ -25,7 +25,7 @@ public:
 private:
 	int _address = 0x45;
 
-    CurrentThermostatStatus *_currentThermostatStatus;
+    ThermostatStatus *_thermostatStatus;
 
     int GetDataFromShtBoard();
 

@@ -1,18 +1,18 @@
 #include "Sht3xHandler.h"
 #include "models/PinDefinitions.h"
 
-Sht3xHandler::Sht3xHandler(CurrentThermostatStatus* currentThermostatStatus)
+Sht3xHandler::Sht3xHandler(ThermostatStatus* thermostatStatus)
 {
-    _currentThermostatStatus = currentThermostatStatus;
+    _thermostatStatus = thermostatStatus;
 
 	Wire.begin(PIN_SDA, PIN_SCL);
 }
 
 void Sht3xHandler::UpdateCurrentStatus()
 {
-    _currentThermostatStatus->CurrentSeconds = millis() / SECONDS;
+    _thermostatStatus->CurrentSeconds = millis() / SECONDS;
 
-    if (!_currentThermostatStatus->CurrentSettings.UseMockTemperatureSensorData)
+    if (!_thermostatStatus->Settings.UseMockTemperatureSensorData)
     {
         int shtResponse = GetDataFromShtBoard();
 
@@ -26,21 +26,21 @@ void Sht3xHandler::SetCurrentStatusOrError(int shtResponse)
 {
     if (shtResponse == 0)
     {
-        _currentThermostatStatus->TemperatureCelsius = TemperatureFahrenheit;
-        _currentThermostatStatus->CurrentHumidity = Humidity;
+        _thermostatStatus->TemperatureCelsius = TemperatureFahrenheit;
+        _thermostatStatus->CurrentHumidity = Humidity;
     }
     else
     {
-        //_currentThermostatStatus-> = ErrorSensorTemperatureProblem;
+        //_thermostatStatus-> = ErrorSensorTemperatureProblem;
     }
 }
 
 void Sht3xHandler::SetCurrentStatusMockValuesIfEnabled()
 {
-    if (_currentThermostatStatus->CurrentSettings.UseMockTemperatureSensorData)
+    if (_thermostatStatus->Settings.UseMockTemperatureSensorData)
     {
-        _currentThermostatStatus->TemperatureCelsius = 1.2;
-        _currentThermostatStatus->CurrentHumidity = 3.4;
+        _thermostatStatus->TemperatureCelsius = 1.2;
+        _thermostatStatus->CurrentHumidity = 3.4;
     }
 }
 

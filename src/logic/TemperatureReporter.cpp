@@ -2,23 +2,23 @@
 #include <iomanip>
 #include "TemperatureReporter.h"
 #include "MqttLogistics.h"
-#include "secrets/SECRETS.h"
 #include "ConvertersToString.h"
+#include "../secrets/SECRETS.h"
 
-TemperatureReporter::TemperatureReporter(CurrentThermostatStatus* currentThermostatStatus,
+TemperatureReporter::TemperatureReporter(ThermostatStatus* thermostatStatus,
                                          MqttLogistics* mqttLogistics)
 {
-    _currentThermostatStatus = currentThermostatStatus;
+    _thermostatStatus = thermostatStatus;
     _mqttLogistics = mqttLogistics;
 }
 
 void TemperatureReporter::SendTemperatureReportEveryTimeout()
 {
-    unsigned long secondsSinceLastReportSent = TemperatureReporter::_currentThermostatStatus->CurrentSeconds - _lastPeripheralOutMessageSentSeconds;
+    unsigned long secondsSinceLastReportSent = TemperatureReporter::_thermostatStatus->CurrentSeconds - _lastPeripheralOutMessageSentSeconds;
 
-    if (secondsSinceLastReportSent > TemperatureReporter::_currentThermostatStatus->CurrentSettings.TemperatureReportMessageSendIntervalSeconds)
+    if (secondsSinceLastReportSent > TemperatureReporter::_thermostatStatus->Settings.TemperatureReportMessageSendIntervalSeconds)
     {
-        _lastPeripheralOutMessageSentSeconds = _currentThermostatStatus->CurrentSeconds;                 // Reset time since last message
+        _lastPeripheralOutMessageSentSeconds = _thermostatStatus->CurrentSeconds;                 // Reset time since last message
 
         std::string outputJson = TemperatureReporter::SerializeReport();
 
@@ -27,16 +27,13 @@ void TemperatureReporter::SendTemperatureReportEveryTimeout()
         char temperatureBuffer[7];
         char setpointBuffer[7];
 
-        String currentMode = ConvertersToString::getThermostatModeAsString(_currentThermostatStatus->ThermostatMode);
-
-        dtostrf(_currentThermostatStatus->TemperatureCelsius, 5, 2, temperatureBuffer);
-        dtostrf(_currentThermostatStatus->Setpoint, 5, 2, setpointBuffer);
+        dtostrf(_thermostatStatus->TemperatureCelsius, 5, 2, temperatureBuffer);
+        dtostrf(_thermostatStatus->Setpoint, 5, 2, setpointBuffer);
 
         _mqttLogistics->publish(SECRETS::TOPIC_JUST_TEMPERATURE_PERIPHERAL_OUT, temperatureBuffer);
         _mqttLogistics->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, setpointBuffer);
-        _mqttLogistics->publish(SECRETS::TOPIC_JUST_MODE_PERIPHERAL_OUT, currentMode.c_str());
 
-        if (TemperatureReporter::_currentThermostatStatus->CurrentSettings.DebugModeOn)
+        if (TemperatureReporter::_thermostatStatus->Settings.DebugModeOn)
         {
             Serial.print("Sent report: ");
             Serial.println(outputJson.c_str());
@@ -49,23 +46,19 @@ std::string TemperatureReporter::SerializeReport()
     StaticJsonDocument<300> jsonDocument;
 
     std::stringstream temperatureStream;
-    temperatureStream << std::fixed << std::setprecision(2) << _currentThermostatStatus->TemperatureCelsius;
+    temperatureStream << std::fixed << std::setprecision(2) << _thermostatStatus->TemperatureCelsius;
     std::string outTemperatureString = temperatureStream.str();
 
     std::stringstream humidityStream;
-    humidityStream << std::fixed << std::setprecision(2) << _currentThermostatStatus->CurrentHumidity;
+    humidityStream << std::fixed << std::setprecision(2) << _thermostatStatus->CurrentHumidity;
     std::string outHumidityString = humidityStream.str();
 
     jsonDocument["TemperatureFahrenheit"] = outTemperatureString;
     jsonDocument["HumidityPercentage"] = outHumidityString;
 
-    jsonDocument["Setpoint"] = _currentThermostatStatus->Setpoint;
+    jsonDocument["Setpoint"] = _thermostatStatus->Setpoint;
 
-    jsonDocument["ThermostatMode"] = ConvertersToString::getThermostatModeAsString(_currentThermostatStatus->ThermostatMode);
-    jsonDocument["FanMode"] = ConvertersToString::getFanModeAsString(_currentThermostatStatus->FanMode);
-
-    jsonDocument["CompressorDelayIfNegative"] = (long)((long)_currentThermostatStatus->CurrentSeconds - (long)_currentThermostatStatus->LastCompressorOffAtSeconds) - (long)_currentThermostatStatus->CurrentSettings.CompressorTimeoutSeconds;
-    jsonDocument["CurrentSeconds"] = _currentThermostatStatus->CurrentSeconds;
+    jsonDocument["CurrentSeconds"] = _thermostatStatus->CurrentSeconds;
 
     std::string outputJson;
 

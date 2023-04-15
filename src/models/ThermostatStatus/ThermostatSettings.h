@@ -6,7 +6,7 @@
 #define MQTT_THERMOSTAT_WT32_ETH01_CURRENT_THERMOSTAT_SETTINGS_H
 
 
-class CurrentSettings
+class ThermostatSettings
 {
 public:
     const int DebugMessageSendIntervalSeconds = 10;
