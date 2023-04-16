@@ -10,12 +10,14 @@ class ThermostatStatus
 public:
     ThermostatSettings Settings = *new ThermostatSettings();
 
-    unsigned long CurrentSeconds = 0;
+   long long CurrentSeconds = 0;
 
     double TemperatureCelsius = 0.0;
-    double CurrentHumidity = 0.0;
+    double Humidity = 0.0;
     double Setpoint = 0.0;
+    double PidValue = 0.0;
 
+    long LoopCounter = 0;
 };
 
 

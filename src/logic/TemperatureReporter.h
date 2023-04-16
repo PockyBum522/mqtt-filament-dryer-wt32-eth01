@@ -17,7 +17,7 @@ private:
     ThermostatStatus* _thermostatStatus;
     MqttLogistics* _mqttLogistics;
 
-    unsigned long _lastPeripheralOutMessageSentSeconds = 0;
+   long long _lastPeripheralOutMessageSentSeconds = 0;
 
     std::string SerializeReport();
 };

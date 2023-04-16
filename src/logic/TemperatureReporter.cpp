@@ -14,26 +14,32 @@ TemperatureReporter::TemperatureReporter(ThermostatStatus* thermostatStatus,
 
 void TemperatureReporter::SendTemperatureReportEveryTimeout()
 {
-    unsigned long secondsSinceLastReportSent = TemperatureReporter::_thermostatStatus->CurrentSeconds - _lastPeripheralOutMessageSentSeconds;
+   long secondsSinceLastReportSent = _thermostatStatus->CurrentSeconds - _lastPeripheralOutMessageSentSeconds;
 
-    if (secondsSinceLastReportSent > TemperatureReporter::_thermostatStatus->Settings.TemperatureReportMessageSendIntervalSeconds)
+    if (secondsSinceLastReportSent > _thermostatStatus->Settings.TemperatureReportMessageSendIntervalSeconds)
     {
         _lastPeripheralOutMessageSentSeconds = _thermostatStatus->CurrentSeconds;                 // Reset time since last message
 
-        std::string outputJson = TemperatureReporter::SerializeReport();
+        std::string outputJson = SerializeReport();
 
-        _mqttLogistics->publish(SECRETS::TOPIC_PERIPHERAL_OUT, outputJson.c_str());
+        _mqttLogistics->publish(SECRETS::TOPIC_JSON_OUT, outputJson.c_str());
 
         char temperatureBuffer[7];
         char setpointBuffer[7];
+        char humidityBuffer[7];
+        char pidBuffer[7];
 
         dtostrf(_thermostatStatus->TemperatureCelsius, 5, 2, temperatureBuffer);
         dtostrf(_thermostatStatus->Setpoint, 5, 2, setpointBuffer);
+        dtostrf(_thermostatStatus->Humidity, 5, 2, humidityBuffer);
+        dtostrf(_thermostatStatus->PidValue, 5, 2, pidBuffer);
 
         _mqttLogistics->publish(SECRETS::TOPIC_JUST_TEMPERATURE_PERIPHERAL_OUT, temperatureBuffer);
         _mqttLogistics->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, setpointBuffer);
+        _mqttLogistics->publish(SECRETS::TOPIC_JUST_HUMIDITY_PERIPHERAL_OUT, humidityBuffer);
+        _mqttLogistics->publish(SECRETS::TOPIC_JUST_PID_VALUE_PERIPHERAL_OUT, pidBuffer);
 
-        if (TemperatureReporter::_thermostatStatus->Settings.DebugModeOn)
+        if (_thermostatStatus->Settings.DebugModeOn)
         {
             Serial.print("Sent report: ");
             Serial.println(outputJson.c_str());
@@ -50,10 +56,10 @@ std::string TemperatureReporter::SerializeReport()
     std::string outTemperatureString = temperatureStream.str();
 
     std::stringstream humidityStream;
-    humidityStream << std::fixed << std::setprecision(2) << _thermostatStatus->CurrentHumidity;
+    humidityStream << std::fixed << std::setprecision(2) << _thermostatStatus->Humidity;
     std::string outHumidityString = humidityStream.str();
 
-    jsonDocument["TemperatureFahrenheit"] = outTemperatureString;
+    jsonDocument["TemperatureCelsius"] = outTemperatureString;
     jsonDocument["HumidityPercentage"] = outHumidityString;
 
     jsonDocument["Setpoint"] = _thermostatStatus->Setpoint;

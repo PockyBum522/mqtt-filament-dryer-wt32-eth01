@@ -1,5 +1,5 @@
 #include "Sht3xHandler.h"
-#include "models/PinDefinitions.h"
+#include "../models/PinDefinitions.h"
 
 Sht3xHandler::Sht3xHandler(ThermostatStatus* thermostatStatus)
 {
@@ -8,39 +8,40 @@ Sht3xHandler::Sht3xHandler(ThermostatStatus* thermostatStatus)
 	Wire.begin(PIN_SDA, PIN_SCL);
 }
 
-void Sht3xHandler::UpdateCurrentStatus()
+void Sht3xHandler::loop()
 {
     _thermostatStatus->CurrentSeconds = millis() / SECONDS;
 
-    if (!_thermostatStatus->Settings.UseMockTemperatureSensorData)
+   long millisSinceLastRequest = millis() - _lastSht30RequestSentMillis;
+
+    if (millisSinceLastRequest > 500)
     {
-        int shtResponse = GetDataFromShtBoard();
+        _lastSht30RequestSentMillis = millis();                 // Reset time since last message
 
-        SetCurrentStatusOrError(shtResponse);
+        if (!_thermostatStatus->Settings.UseMockTemperatureSensorData)
+        {
+            int shtResponse = GetDataFromShtBoard();
+
+            SetCurrentValues(shtResponse);
+        }
+        else
+        {
+            _thermostatStatus->TemperatureCelsius = 1.23;
+            _thermostatStatus->Humidity = 4.56;
+        }
     }
-
-    SetCurrentStatusMockValuesIfEnabled();
 }
 
-void Sht3xHandler::SetCurrentStatusOrError(int shtResponse)
+void Sht3xHandler::SetCurrentValues(int shtResponse)
 {
     if (shtResponse == 0)
     {
-        _thermostatStatus->TemperatureCelsius = TemperatureFahrenheit;
-        _thermostatStatus->CurrentHumidity = Humidity;
+        _thermostatStatus->TemperatureCelsius = TemperatureCelsius;
+        _thermostatStatus->Humidity = Humidity;
     }
     else
     {
-        //_thermostatStatus-> = ErrorSensorTemperatureProblem;
-    }
-}
-
-void Sht3xHandler::SetCurrentStatusMockValuesIfEnabled()
-{
-    if (_thermostatStatus->Settings.UseMockTemperatureSensorData)
-    {
-        _thermostatStatus->TemperatureCelsius = 1.2;
-        _thermostatStatus->CurrentHumidity = 3.4;
+        //Serial.println("ERROR: Sht30 isn't connected properly");
     }
 }
 
@@ -59,7 +60,7 @@ int Sht3xHandler::GetDataFromShtBoard()
     if (Wire.endTransmission() != 0)
         return 1;
 
-    delay(500);
+    //delay(10);
 
     // Request 6 bytes of data
     Wire.requestFrom(_address, 6);
@@ -71,7 +72,7 @@ int Sht3xHandler::GetDataFromShtBoard()
         i = Wire.read();
     }
 
-    delay(50);
+    //delay(10);
 
     if (Wire.available() != 0)
         return 2;

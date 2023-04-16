@@ -16,7 +16,7 @@ private:
     ThermostatStatus *_thermostatStatus;
     MqttLogistics *_mqttLogistics;
 
-    unsigned long _lastDebugOutMessageSentSeconds = 0;
+   long _lastDebugOutMessageSentSeconds = 0;
 };
 
 

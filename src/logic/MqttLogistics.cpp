@@ -1,7 +1,13 @@
+#include <Arduino.h>
 #include <ETH.h>
+#include <cstdlib>
 #include "secrets/SECRETS.h"
 #include "MqttLogistics.h"
 #include "ConvertersToString.h"
+#include "../models/ThermostatStatus/ThermostatStatus.h"
+#include "../secrets/SECRETS.h"
+#include "../models/PinDefinitions.h"
+#include "time.h"
 
 MqttLogistics::MqttLogistics(ThermostatStatus *thermostatStatus,
                              WiFiClient *client)
@@ -13,7 +19,7 @@ MqttLogistics::MqttLogistics(ThermostatStatus *thermostatStatus,
 
     _mqttClient->setClient(*_ethernetClient);
     _mqttClient->setServer(SECRETS::MQTT_SERVER, 1883);
-    _mqttClient->setBufferSize(512);
+    _mqttClient->setBufferSize(680);
 
     _mqttClient->setCallback([this] (char* topic, byte* payload, unsigned int length) { this->onMqttMessageReceived(topic, payload, length); });
 }
@@ -26,14 +32,26 @@ void MqttLogistics::onMqttMessageReceived(char* topic, uint8_t* payload, unsigne
 
     if (_thermostatStatus->Settings.DebugModeOn)
     {
-        String topicMessage = String("Topic was: ") + topicStr;
-        String payloadMessage = String("Payload was: ") + payloadStr;
+        Serial.println();
+        Serial.println();
 
-        Serial.println(topicMessage);
-        Serial.println(payloadMessage);
+        Serial.println("New MQTT Message:");
+        Serial.println();
+        Serial.print("Topic is [");
+        Serial.print(topicStr);
+        Serial.print("] ");
+        Serial.println();
 
-        _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, topicMessage.c_str(), false);
-        _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, payloadMessage.c_str(), false);
+        Serial.print("Payload is [");
+        Serial.print(payloadStr);
+        Serial.print("] ");
+        Serial.println();
+
+        Serial.println();
+        Serial.println();
+
+        _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, topicStr.c_str(), false);
+        _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, payloadStr.c_str(), false);
     }
 
     // Handle getInfoAllNodes request
@@ -45,14 +63,7 @@ void MqttLogistics::onMqttMessageReceived(char* topic, uint8_t* payload, unsigne
         MqttLogistics::_mqttClient->publish(SECRETS::TOPIC_GET_INFO_ALL, messageToSend.c_str());
     }
 
-    // If message isn't coming in on the commands topic, we don't care
-    if (topicStr.equalsIgnoreCase(SECRETS::TOPIC_SET_MODE_INCOMING))
-    {
-        String modeUpdateConfirmation = "Updating mode: " + payloadStr;
-        _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, modeUpdateConfirmation.c_str(), false);
-        setThermostatMode(payloadStr);
-        updateHomeAssistantWithNewValues();
-    }
+    // SET TEMPERATURE HANDLER
 
     if (topicStr.equalsIgnoreCase(SECRETS::TOPIC_SET_TEMPERATURE_INCOMING))
     {
@@ -66,42 +77,49 @@ void MqttLogistics::onMqttMessageReceived(char* topic, uint8_t* payload, unsigne
             updateHomeAssistantWithNewValues();
         }
     }
-}
 
-void MqttLogistics::setThermostatSetpoint(String commandString)
-{
-    double setpointFloat = std::stod(commandString.c_str());
+    // RELAYS ON/OFF HANDLER
 
-    _thermostatStatus->Setpoint = setpointFloat;
-}
+    if (topicStr.equalsIgnoreCase(SECRETS::TOPIC_SET_RELAY_INCOMING))
+    {
+        _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, "Message came in on SET_RELAY topic");
 
-void MqttLogistics::setThermostatMode(const String &payloadStr)
-{
-//    _lastCommand = payloadStr.c_str();
-//
-//    if (payloadStr.equalsIgnoreCase("cool"))
-//    {
-//        _thermostatStatus->ThermostatMode = ModeCooling;
-//        _thermostatStatus->FanMode = FanOnAutomatically;
-//    }
-//    else if (payloadStr.equalsIgnoreCase("MAINTAIN"))
-//    {
-//        _thermostatStatus->ThermostatMode = ModeMaintainingRange;
-//    }
-//    else if (payloadStr.equalsIgnoreCase("heat"))
-//    {
-//        _thermostatStatus->ThermostatMode = ModeHeating;
-//        _thermostatStatus->FanMode = FanOnAutomatically;
-//    }
-//    else if (payloadStr.equalsIgnoreCase("fan_only"))
-//    {
-//        _thermostatStatus->FanMode = FanAlwaysOn;
-//    }
-//    else if (payloadStr.equalsIgnoreCase("OFF"))
-//    {
-//        _thermostatStatus->ThermostatMode = ModeOff;
-//        _thermostatStatus->FanMode = FanOnAutomatically;
-//    }
+        char relayNumber = payloadStr[0];
+
+        if (payloadStr[2] == 'N')
+        {
+            _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, "Message was to turn relay ON");
+
+            if (relayNumber == '1')
+                digitalWrite(PIN_RELAY_01, STATE_ON);
+
+            if (relayNumber == '2')
+                digitalWrite(PIN_RELAY_02, STATE_ON);
+
+            if (relayNumber == '3')
+                digitalWrite(PIN_RELAY_03, STATE_ON);
+
+            if (relayNumber == '4')
+                digitalWrite(PIN_RELAY_04, STATE_ON);
+        }
+
+        if (payloadStr[2] == 'F')
+        {
+            _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, "Message was to turn relay OFF");
+
+            if (relayNumber == '1')
+                digitalWrite(PIN_RELAY_01, STATE_OFF);
+
+            if (relayNumber == '2')
+                digitalWrite(PIN_RELAY_02, STATE_OFF);
+
+            if (relayNumber == '3')
+                digitalWrite(PIN_RELAY_03, STATE_OFF);
+
+            if (relayNumber == '4')
+                digitalWrite(PIN_RELAY_04, STATE_OFF);
+        }
+    }
 }
 
 void MqttLogistics::reconnectMqttIfNotConnected()
@@ -113,35 +131,37 @@ void MqttLogistics::reconnectMqttIfNotConnected()
         Serial.print(SECRETS::MQTT_SERVER);
 
         // Get last 6 of mac address without ':'
-        String macTrimmed = ETH.macAddress().substring(9, 11) + ETH.macAddress().substring(12, 14) + ETH.macAddress().substring(15, 17);
+        String macTrimmed = String("-") + ETH.macAddress().substring(9, 11) + ETH.macAddress().substring(12, 14) + ETH.macAddress().substring(15, 17);
 
         Serial.print("Last 6 of mac: ");
         Serial.println(macTrimmed);
 
         Serial.println();
 
-        String mqttId = "WT32_ETH01_HVAC_" + macTrimmed;
+        String mqttId = _thermostatStatus->Settings.DeviceName + macTrimmed;
 
         // Attempt to connect
         if (_mqttClient->connect(mqttId.c_str(), SECRETS::MQTT_USER, SECRETS::MQTT_PASSWORD))
         {
             Serial.println("...connected");
 
+            String dateTimestamp = GetTimestamp();
+
             // Once connected, publish an announcement...
-            String data = "Hello from " + mqttId + " at IPv4: " + ETH.localIP().toString() + " ETH Mac addr: " + ETH.macAddress();
+            String data = "AT: " + dateTimestamp+ ", " + mqttId + " @ IP: " + ETH.localIP().toString();
+            data += " ETH Mac: " + ETH.macAddress();
+
             _mqttClient->publish(SECRETS::TOPIC_GET_INFO_ALL, data.c_str());
 
             Serial.print("Device is up: ");
             Serial.println(data);
 
             // ... and resubscribe
-            _mqttClient->subscribe(SECRETS::TOPIC_SET_TEMPERATURE_INCOMING);
-            _mqttClient->subscribe(SECRETS::TOPIC_SET_MODE_INCOMING);
-
             _mqttClient->subscribe(SECRETS::TOPIC_GET_INFO_ALL);
+            _mqttClient->subscribe(SECRETS::TOPIC_SET_TEMPERATURE_INCOMING);
+            _mqttClient->subscribe(SECRETS::TOPIC_SET_RELAY_INCOMING);
 
-            _mqttClient->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, "71.00");
-            _mqttClient->publish(SECRETS::TOPIC_JUST_MODE_PERIPHERAL_OUT, "off");
+            _mqttClient->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, "0.00");
         }
         else
         {
@@ -155,6 +175,21 @@ void MqttLogistics::reconnectMqttIfNotConnected()
             // Wait 5 seconds before retrying
             delay(5000);
         }
+    }
+}
+
+void MqttLogistics::setThermostatSetpoint(String commandString)
+{
+    double setpointFloat = std::stod(commandString.c_str());
+
+    if (setpointFloat < _thermostatStatus->Settings.MaximumPermittedTemperatureCelsius &&
+        setpointFloat > 0)
+    {
+        _thermostatStatus->Setpoint = setpointFloat;
+    }
+    else
+    {
+        _thermostatStatus->Setpoint = 0.0;
     }
 }
 
@@ -183,11 +218,6 @@ String MqttLogistics::getIncomingPayloadAsString(uint8_t *payload, unsigned int 
         payloadStr += ((char)payload[i]);
     }
 
-    Serial.print("Payload is [");
-    Serial.print(payloadStr);
-    Serial.print("] ");
-    Serial.println();
-
     return payloadStr;
 }
 
@@ -200,11 +230,6 @@ String MqttLogistics::getIncomingTopicAsString(char *topic)
     {
         topicStr += ((char)topic[i]);
     }
-
-    Serial.print("Topic is [");
-    Serial.print(topicStr);
-    Serial.print("] ");
-    Serial.println();
 
     return topicStr;
 }
@@ -245,4 +270,31 @@ void MqttLogistics::updateHomeAssistantWithNewValues()
 //
 //    _mqttClient->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, setpointBuffer);
 //    _mqttClient->publish(SECRETS::TOPIC_JUST_MODE_PERIPHERAL_OUT, currentMode.c_str());
+}
+
+String MqttLogistics::GetTimestamp()
+{
+    const char* ntpServer = "pool.ntp.org";
+    const long  gmtOffset_sec = 0;
+    const int   daylightOffset_sec = 3600;
+
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
+    struct tm timeinfo;
+
+    if(!getLocalTime(&timeinfo)){
+        Serial.println("Failed to obtain time");
+        return "";
+    }
+
+    // Fix GMT offset cause I have no idea how using what's above
+    timeinfo.tm_hour -= 5;
+
+    if (timeinfo.tm_hour < 0) timeinfo.tm_hour += 24;
+
+    static char timeBuffer[50];
+
+    strftime(timeBuffer, 50, "%Y-%b-%d @ %H:%M:%S", &timeinfo);
+
+    return {timeBuffer};
 }

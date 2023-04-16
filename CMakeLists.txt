@@ -30,4 +30,4 @@ add_custom_target(
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_executable(Z_DUMMY_TARGET ${SRC_LIST} src/logic/ConvertersToString.cpp src/logic/ConvertersToString.h)
+add_executable(Z_DUMMY_TARGET ${SRC_LIST} src/logic/DryerController.cpp src/logic/DryerController.h)

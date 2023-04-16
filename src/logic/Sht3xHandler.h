@@ -20,18 +20,18 @@ public:
 	float TemperatureFahrenheit = 0;
     float Humidity = 0;
 
-    void UpdateCurrentStatus();
+    void loop();
 
 private:
 	int _address = 0x45;
 
     ThermostatStatus *_thermostatStatus;
 
+   long long _lastSht30RequestSentMillis = 0;
+
+    void SetCurrentValues(int shtResponse);
+
     int GetDataFromShtBoard();
-
-    void SetCurrentStatusOrError(int shtResponse);
-
-    void SetCurrentStatusMockValuesIfEnabled();
 };
 
 #endif

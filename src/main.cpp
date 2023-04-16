@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFiClient.h>
 #include <Wire.h>
+#include <PID_v1.h>
 #include <sstream>
 #include <ETH.h>
 #include <AsyncElegantOTA.h>
@@ -11,7 +12,8 @@
 #include "logic/Sht3xHandler.h"
 #include "logic/TemperatureReporter.h"
 #include "logic/DebugMessageSender.h"
-#include "logic/ConvertersToString.h"
+#include "logic/DryerController.h"
+
 
 #define DEBUG_ETHERNET_WEBSERVER_PORT Serial
 
@@ -28,13 +30,19 @@ auto temperatureReportSender = *new TemperatureReporter(&currentStatus, &mqttLog
 auto debugMqttSender = *new DebugMessageSender(&currentStatus, &mqttLogistics);
 auto temperatureSensorHandler = *new Sht3xHandler(&currentStatus);
 
+auto dryerController = *new DryerController(&currentStatus, &mqttLogistics);
+
 void setInitialSettingsAfterDelay();
 
-void managePid();
+void setHeaterDutyCycleWithPid();
+
+void turnOnFan();
+
+void turnOffFan();
 
 //Define Variables we'll be connecting to
-double setpoint = 100.0;
-double input = 72.0;
+double setpoint = 0.0;
+double input = 30.0;
 double output = 0.0;
 
 //Define the aggressive tuning parameters
@@ -42,13 +50,13 @@ double aggressiveKp = 4;
 double aggressiveKi = 0.2;
 double aggressiveKd = 1;
 
-//Define the aggressive tuning parameters
-double conservativeKp = 4;
-double conservativeKi = 0.2;
-double conservativeKd = 1;
+//Define the conservative tuning parameters
+double conservativeKp = 1;
+double conservativeKi = 0.05;
+double conservativeKd = 0.25;
 
 //Specify the links and initial tuning parameters
-//PID myPID(&input, &output, &setpoint, conservativeKp, conservativeKi, conservativeKd, DIRECT);
+PID myPID(&input, &output, &setpoint, conservativeKp, conservativeKi, conservativeKd, DIRECT);
 
 void setup()
 {
@@ -69,7 +77,7 @@ void setup()
 
     Serial.begin(115200);
 
-    //myPID.SetMode(AUTOMATIC);
+    myPID.SetMode(AUTOMATIC);
 
     ETH.begin(ETH_PHY_ADDR, ETH_PHY_POWER);
 
@@ -91,34 +99,49 @@ void setup()
 
 void loop()
 {
-    temperatureSensorHandler.UpdateCurrentStatus();
+   long startMillis = millis();
+
+    temperatureSensorHandler.loop();
 
     mqttLogistics.reconnectMqttIfNotConnected();
     mqttLogistics.loopClient();
 
-    temperatureReportSender.SendTemperatureReportEveryTimeout();
-    debugMqttSender.SendMqttDebugMessagesEveryTimeout();
+    dryerController.loop();
 
-    managePid();
+    temperatureReportSender.SendTemperatureReportEveryTimeout();
+    //debugMqttSender.SendMqttDebugMessagesEveryTimeout();
+
+    setHeaterDutyCycleWithPid();
+
+    currentStatus.LoopCounter++;
+
+    dryerController.LastLoopRunTime = ((long)millis()) - startMillis;
 }
 
-void managePid()
+void setHeaterDutyCycleWithPid()
 {
-//    input = currentStatus.TemperatureCelsius;
-//
-//    double gap = abs(currentStatus.Setpoint - input); //distance away from setpoint
-//
-//    if(gap < 10)
-//    {
-//        //we're close to setpoint, use conservative tuning parameters
-//        myPID.SetTunings(conservativeKp, conservativeKi, conservativeKd);
-//    }
-//    else
-//    {
-//        //we're far from setpoint, use aggressive tuning parameters
-//        myPID.SetTunings(aggressiveKp, aggressiveKi, aggressiveKd);
-//    }
-//
-//    myPID.Compute();
-//    analogWrite(3, output);
+    input = currentStatus.TemperatureCelsius;
+    setpoint = currentStatus.Setpoint;
+
+    double gap = abs(currentStatus.Setpoint - input); //distance away from setpoint
+
+    if(gap < 5)
+    {
+        //we're close to setpoint, use conservative tuning parameters
+        myPID.SetTunings(conservativeKp, conservativeKi, conservativeKd);
+    }
+    else
+    {
+        //we're far from setpoint, use aggressive tuning parameters
+        myPID.SetTunings(aggressiveKp, aggressiveKi, aggressiveKd);
+    }
+
+    bool newPidAvailable = myPID.Compute();
+
+    if (newPidAvailable)
+    {
+        currentStatus.PidValue = output;
+
+        dryerController.setHeaterDutyCycle(output);
+    }
 }

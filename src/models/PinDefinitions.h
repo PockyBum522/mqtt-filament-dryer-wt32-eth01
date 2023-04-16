@@ -20,10 +20,4 @@
 #define STATE_ON false
 #define STATE_OFF true
 
-// Now assign what relay does what HVAC function
-const int PIN_GREEN_FAN_CALL = PIN_RELAY_01;
-const int PIN_YELLOW_COMPRESSOR_CALL = PIN_RELAY_02;
-const int PIN_ORANGE_REVERSER_VALVE = PIN_RELAY_03;
-const int PIN_WHITE_AUX_HEAT = PIN_RELAY_04;
-
 #endif //MQTT_THERMOSTAT_WT32_ETH01_PIN_DEFINITIONS_H

@@ -27,7 +27,6 @@ private:
 
     std::string _lastCommand;
 
-    void setThermostatMode(const String &payloadStr);
     void setThermostatSetpoint(String commandString);
 
     static String getIncomingPayloadAsString(uint8_t *string, unsigned int payloadLength);
@@ -37,6 +36,8 @@ private:
     boolean isNumeric(String str);
 
     void updateHomeAssistantWithNewValues();
+
+    String GetTimestamp();
 };
 
 #endif //MQTT_THERMOSTAT_WT32_ETH01_MQTT_LOGISTICS_H
