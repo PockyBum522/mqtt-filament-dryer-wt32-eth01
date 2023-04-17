@@ -1,5 +1,5 @@
-#ifndef MQTT_THERMOSTAT_WT32_ETH01_MQTT_LOGISTICS_H
-#define MQTT_THERMOSTAT_WT32_ETH01_MQTT_LOGISTICS_H
+#ifndef MQTT_FILAMENT_DRYER_WT32_ETH01_MQTT_LOGISTICS_H
+#define MQTT_FILAMENT_DRYER_WT32_ETH01_MQTT_LOGISTICS_H
 
 #include <WiFiClient.h>
 #include <PubSubClient.h>
@@ -27,7 +27,7 @@ private:
 
     std::string _lastCommand;
 
-    void setThermostatSetpoint(String commandString);
+    void setThermostatTemperatureCelsiusSetpoint(String commandString);
 
     static String getIncomingPayloadAsString(uint8_t *string, unsigned int payloadLength);
 
@@ -38,6 +38,8 @@ private:
     void updateHomeAssistantWithNewValues();
 
     String GetTimestamp();
+
+    void setThermostatHumiditySetpoint(String str);
 };
 
-#endif //MQTT_THERMOSTAT_WT32_ETH01_MQTT_LOGISTICS_H
+#endif //MQTT_FILAMENT_DRYER_WT32_ETH01_MQTT_LOGISTICS_H

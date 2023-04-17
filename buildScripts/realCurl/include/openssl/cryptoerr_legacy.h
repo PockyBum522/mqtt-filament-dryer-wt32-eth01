@@ -119,7 +119,7 @@ OSSL_DEPRECATEDIN_3_0 int ERR_load_X509V3_strings(void);
 #  define ASN1_F_ASN1_ITEM_VERIFY                          0
 #  define ASN1_F_ASN1_MBSTRING_NCOPY                       0
 #  define ASN1_F_ASN1_OBJECT_NEW                           0
-#  define ASN1_F_ASN1_OUTPUT_DATA                          0
+#  define ASN1_F_ASN1_RELAY_DATA                          0
 #  define ASN1_F_ASN1_PCTX_NEW                             0
 #  define ASN1_F_ASN1_PRIMITIVE_NEW                        0
 #  define ASN1_F_ASN1_SCTX_NEW                             0

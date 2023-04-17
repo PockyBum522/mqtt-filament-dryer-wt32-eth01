@@ -51,26 +51,30 @@ void DryerController::setHeaterDutyCycle(double dutyCycle)
     outputDebugValues(dutyCycle);
 }
 
-void DryerController::turnOffFan()
-{
-    digitalWrite(PIN_RELAY_02, 0);
-}
-
 void DryerController::turnOnFan()
 {
-    digitalWrite(PIN_RELAY_02, 1);
+    //bool watchOutFanControlIsBackwardsState = STATE_ON;
+
+    digitalWrite(PIN_FAN_CONTROL, STATE_ON);
+}
+
+void DryerController::turnOffFan()
+{
+    //bool watchOutFanControlIsBackwardsState = STATE_OFF;
+
+    digitalWrite(PIN_FAN_CONTROL, STATE_OFF);
 }
 
 void DryerController::turnOnHeater()
 {
     _lastHeaterOnAtMillis = millis();
 
-    digitalWrite(PIN_RELAY_01, 1);
+    digitalWrite(PIN_HEATER_CONTROL, STATE_ON);
 }
 
 void DryerController::turnOffHeater()
 {
-    digitalWrite(PIN_RELAY_01, 0);
+    digitalWrite(PIN_HEATER_CONTROL, STATE_OFF);
 }
 
 void DryerController::outputDebugValues(double dutyCycle)
@@ -79,7 +83,7 @@ void DryerController::outputDebugValues(double dutyCycle)
     currentMillisMessage += millis();
 
     String currentSetpointMessage = "Current setpoint: ";
-    currentSetpointMessage += _thermostatStatus->Setpoint;
+    currentSetpointMessage += _thermostatStatus->SetpointTemperatureCelsius;
 
     String currentTemperatureMessage = "Current temp (c): ";
     currentTemperatureMessage += _thermostatStatus->TemperatureCelsius;
@@ -100,7 +104,7 @@ void DryerController::outputDebugValues(double dutyCycle)
     jsonDocument["heaterOnAtMessage"] = _lastHeaterOnAtMillis;
     jsonDocument["heaterNextOffMessage"] = _nextHeaterOffAtMillis;
     jsonDocument["heaterPermittedBackOnMessage"] = _nextHeaterCanTurnBackOnAtMillis;
-    //jsonDocument["PIN_RELAY_02"] = !digitalRead(PIN_RELAY_02);
+    //jsonDocument["PIN_OUTPUT_02"] = !digitalRead(PIN_OUTPUT_02);
     //jsonDocument["LastLoopRunTime"] = LastLoopRunTime;
     jsonDocument["LoopCounterSinceLastOutput"] = _thermostatStatus->LoopCounter;
     jsonDocument["_lastHeaterOnAtMillis"] = _lastHeaterOnAtMillis;

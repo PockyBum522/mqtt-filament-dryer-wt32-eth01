@@ -72,7 +72,20 @@ void MqttLogistics::onMqttMessageReceived(char* topic, uint8_t* payload, unsigne
         {
             Serial.println("Saw command to set thermostat setpoint! Value: " + payloadStr);
 
-            setThermostatSetpoint(payloadStr);
+            setThermostatTemperatureCelsiusSetpoint(payloadStr);
+
+            updateHomeAssistantWithNewValues();
+        }
+    }
+
+    if (topicStr.equalsIgnoreCase(SECRETS::TOPIC_SET_HUMIDITY_INCOMING))
+    {
+        // Change thermostat setpoint
+        if (isNumeric(payloadStr))
+        {
+            Serial.println("Saw command to set humidity setpoint! Value: " + payloadStr);
+
+            setThermostatHumiditySetpoint(payloadStr);
 
             updateHomeAssistantWithNewValues();
         }
@@ -91,16 +104,16 @@ void MqttLogistics::onMqttMessageReceived(char* topic, uint8_t* payload, unsigne
             _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, "Message was to turn relay ON");
 
             if (relayNumber == '1')
-                digitalWrite(PIN_RELAY_01, STATE_ON);
+                digitalWrite(PIN_OUTPUT_01, STATE_ON);
 
             if (relayNumber == '2')
-                digitalWrite(PIN_RELAY_02, STATE_ON);
+                digitalWrite(PIN_OUTPUT_02, STATE_ON);
 
             if (relayNumber == '3')
-                digitalWrite(PIN_RELAY_03, STATE_ON);
+                digitalWrite(PIN_OUTPUT_03, STATE_ON);
 
             if (relayNumber == '4')
-                digitalWrite(PIN_RELAY_04, STATE_ON);
+                digitalWrite(PIN_OUTPUT_04, STATE_ON);
         }
 
         if (payloadStr[2] == 'F')
@@ -108,16 +121,16 @@ void MqttLogistics::onMqttMessageReceived(char* topic, uint8_t* payload, unsigne
             _mqttClient->publish(SECRETS::TOPIC_DEBUG_OUT, "Message was to turn relay OFF");
 
             if (relayNumber == '1')
-                digitalWrite(PIN_RELAY_01, STATE_OFF);
+                digitalWrite(PIN_OUTPUT_01, STATE_OFF);
 
             if (relayNumber == '2')
-                digitalWrite(PIN_RELAY_02, STATE_OFF);
+                digitalWrite(PIN_OUTPUT_02, STATE_OFF);
 
             if (relayNumber == '3')
-                digitalWrite(PIN_RELAY_03, STATE_OFF);
+                digitalWrite(PIN_OUTPUT_03, STATE_OFF);
 
             if (relayNumber == '4')
-                digitalWrite(PIN_RELAY_04, STATE_OFF);
+                digitalWrite(PIN_OUTPUT_04, STATE_OFF);
         }
     }
 }
@@ -175,21 +188,6 @@ void MqttLogistics::reconnectMqttIfNotConnected()
             // Wait 5 seconds before retrying
             delay(5000);
         }
-    }
-}
-
-void MqttLogistics::setThermostatSetpoint(String commandString)
-{
-    double setpointFloat = std::stod(commandString.c_str());
-
-    if (setpointFloat < _thermostatStatus->Settings.MaximumPermittedTemperatureCelsius &&
-        setpointFloat > 0)
-    {
-        _thermostatStatus->Setpoint = setpointFloat;
-    }
-    else
-    {
-        _thermostatStatus->Setpoint = 0.0;
     }
 }
 
@@ -266,7 +264,7 @@ void MqttLogistics::updateHomeAssistantWithNewValues()
 //
 //    String currentMode =  ConvertersToString::getThermostatModeAsString(_thermostatStatus->ThermostatMode);
 //
-//    dtostrf(_thermostatStatus->Setpoint, 5, 2, setpointBuffer);
+//    dtostrf(_thermostatStatus->SetpointTemperatureCelsius, 5, 2, setpointBuffer);
 //
 //    _mqttClient->publish(SECRETS::TOPIC_JUST_SETPOINT_PERIPHERAL_OUT, setpointBuffer);
 //    _mqttClient->publish(SECRETS::TOPIC_JUST_MODE_PERIPHERAL_OUT, currentMode.c_str());
@@ -297,4 +295,34 @@ String MqttLogistics::GetTimestamp()
     strftime(timeBuffer, 50, "%Y-%b-%d @ %H:%M:%S", &timeinfo);
 
     return {timeBuffer};
+}
+
+void MqttLogistics::setThermostatTemperatureCelsiusSetpoint(String commandString)
+{
+    double setpointFloat = std::stod(commandString.c_str());
+
+    if (setpointFloat < _thermostatStatus->Settings.MaximumPermittedTemperatureCelsius &&
+        setpointFloat > 0)
+    {
+        _thermostatStatus->SetpointTemperatureCelsius = setpointFloat;
+    }
+    else
+    {
+        _thermostatStatus->SetpointTemperatureCelsius = 0.0;
+    }
+}
+
+void MqttLogistics::setThermostatHumiditySetpoint(String mqttPayload)
+{
+    double humiditySetpointDouble = std::stod(mqttPayload.c_str());
+
+    if (humiditySetpointDouble < 100 &&
+        humiditySetpointDouble > 0)
+    {
+        _thermostatStatus->SetpointHumidity = humiditySetpointDouble;
+    }
+    else
+    {
+        _thermostatStatus->SetpointHumidity = 50.0;
+    }
 }

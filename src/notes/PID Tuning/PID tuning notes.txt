@@ -1,0 +1,38 @@
+1.51 = temp range in oscillation (max - min)
+
+3.356% of 45 (setpoint was 45)
+
+3:50:03 (On rise at 45.02c)
+4:21:12 (On fall at 45.97c)
+4:49:33 (On next rise at 45.02c)
+
+(My KD is in minutes, so 3570 seconds = 59.5 for KD)
+
+
+
+
+
+
+1. Set the proportional gain (KP) to zero.
+
+2. Adjust the setpoint slightly below the desired value to account for potential overshoot.
+
+3. Observe the system's natural oscillation frequency; you will need to record the time it takes for one complete cycle, and the Process Variable (temperature) values at the PV (temperature) extremes of the oscillation:
+
+4. Use a stopwatch to time the oscillation and record PV values:
+	a. Start the stopwatch when PV just passes the setpoint during a rise in the oscillation cycle.
+	b. When PV then peaks, record the maximum temperature value reached during the overshoot.
+	(PV will then drop (cool) and more heat will be applied after crossing the setpoint.)
+	c. Record the minimum PV value reached at the bottom of the PV range during the cooldown. (Should be the lowest value in the cycle)
+	d. Stop the stopwatch just after PV passes the setpoint again, during PV rise.
+
+5. Calculate the gain (KP) by subtracting the minimum PV value from the maximum PV value and dividing the result by the setpoint. 
+	a. Express this value as a percentage and enter it as the KP value.
+
+6. Enter the total oscillation time (in seconds or minutes, it will depend on what your controller uses, which should be specified in the manual) and set it as the integral time (KI)
+
+7. Divide the KI value by 6 to determine the derivative time (KD). Divided by 6 is (usually) good for an oven. For other applications, use this as a starting point.
+
+8. Observe the system's response. If oscillation persists, increase the proportional gain. If the system reacts too quickly or does not recover from overshoot, decrease KD.
+
+Note: Avoid adjusting KI if it was accurately measured during a warmed-up state.

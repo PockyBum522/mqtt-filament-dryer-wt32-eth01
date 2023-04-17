@@ -30,7 +30,7 @@ void TemperatureReporter::SendTemperatureReportEveryTimeout()
         char pidBuffer[7];
 
         dtostrf(_thermostatStatus->TemperatureCelsius, 5, 2, temperatureBuffer);
-        dtostrf(_thermostatStatus->Setpoint, 5, 2, setpointBuffer);
+        dtostrf(_thermostatStatus->SetpointTemperatureCelsius, 5, 2, setpointBuffer);
         dtostrf(_thermostatStatus->Humidity, 5, 2, humidityBuffer);
         dtostrf(_thermostatStatus->PidValue, 5, 2, pidBuffer);
 
@@ -62,7 +62,7 @@ std::string TemperatureReporter::SerializeReport()
     jsonDocument["TemperatureCelsius"] = outTemperatureString;
     jsonDocument["HumidityPercentage"] = outHumidityString;
 
-    jsonDocument["Setpoint"] = _thermostatStatus->Setpoint;
+    jsonDocument["SetpointTemperatureCelsius"] = _thermostatStatus->SetpointTemperatureCelsius;
 
     jsonDocument["CurrentSeconds"] = _thermostatStatus->CurrentSeconds;
 

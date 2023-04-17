@@ -32,7 +32,7 @@ private:
 
     int _dutyCycleSpanMillis = 5000;
 
-    long long _lastHeaterOnAtMillis = 0;
+    long long _lastHeaterOnAtMillis = 300;  // Kick this ahead so the fan comes on when the dryer is first started
     long long _nextHeaterCanTurnBackOnAtMillis = 0;
     long long _nextHeaterOffAtMillis = 0;
 

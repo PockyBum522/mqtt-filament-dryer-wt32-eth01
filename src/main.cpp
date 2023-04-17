@@ -45,35 +45,25 @@ double setpoint = 0.0;
 double input = 30.0;
 double output = 0.0;
 
-//Define the aggressive tuning parameters
-double aggressiveKp = 4;
-double aggressiveKi = 0.2;
-double aggressiveKd = 1;
-
-//Define the conservative tuning parameters
-double conservativeKp = 1;
-double conservativeKi = 0.05;
-double conservativeKd = 0.25;
-
 //Specify the links and initial tuning parameters
-PID myPID(&input, &output, &setpoint, conservativeKp, conservativeKi, conservativeKd, DIRECT);
+PID myPID(&input, &output, &setpoint, currentStatus.Settings.ConservativeKp, currentStatus.Settings.ConservativeKi, currentStatus.Settings.ConservativeKd, DIRECT);
 
 void setup()
 {
-    pinMode(PIN_RELAY_01, OUTPUT);
-    pinMode(PIN_RELAY_02, OUTPUT);
-    pinMode(PIN_RELAY_03, OUTPUT);
-    pinMode(PIN_RELAY_04, OUTPUT);
-    pinMode(PIN_RELAY_05, OUTPUT);
-    pinMode(PIN_RELAY_06, OUTPUT);
+    pinMode(PIN_OUTPUT_01, OUTPUT);
+    pinMode(PIN_OUTPUT_02, OUTPUT);
+    pinMode(PIN_OUTPUT_03, OUTPUT);
+    pinMode(PIN_OUTPUT_04, OUTPUT);
+    pinMode(PIN_OUTPUT_05, OUTPUT);
+    pinMode(PIN_OUTPUT_06, OUTPUT);
 
     // Turn all pins off
-    digitalWrite(PIN_RELAY_01, HIGH);
-    digitalWrite(PIN_RELAY_02, HIGH);
-    digitalWrite(PIN_RELAY_03, HIGH);
-    digitalWrite(PIN_RELAY_04, HIGH);
-    digitalWrite(PIN_RELAY_05, HIGH);
-    digitalWrite(PIN_RELAY_06, HIGH);
+    digitalWrite(PIN_OUTPUT_01, STATE_OFF);
+    digitalWrite(PIN_OUTPUT_02, STATE_OFF);
+    digitalWrite(PIN_OUTPUT_03, STATE_OFF);
+    digitalWrite(PIN_OUTPUT_04, STATE_OFF);
+    digitalWrite(PIN_OUTPUT_05, STATE_OFF);
+    digitalWrite(PIN_OUTPUT_06, STATE_OFF);
 
     Serial.begin(115200);
 
@@ -109,7 +99,7 @@ void loop()
     dryerController.loop();
 
     temperatureReportSender.SendTemperatureReportEveryTimeout();
-    //debugMqttSender.SendMqttDebugMessagesEveryTimeout();
+    debugMqttSender.SendMqttDebugMessagesEveryTimeout();
 
     setHeaterDutyCycleWithPid();
 
@@ -121,19 +111,19 @@ void loop()
 void setHeaterDutyCycleWithPid()
 {
     input = currentStatus.TemperatureCelsius;
-    setpoint = currentStatus.Setpoint;
+    setpoint = currentStatus.SetpointTemperatureCelsius;
 
-    double gap = abs(currentStatus.Setpoint - input); //distance away from setpoint
+    double gap = abs(currentStatus.SetpointTemperatureCelsius - input);             // Distance away from setpoint
 
-    if(gap < 5)
+    if(gap < currentStatus.Settings.SwitchToConservativeMargin)
     {
         //we're close to setpoint, use conservative tuning parameters
-        myPID.SetTunings(conservativeKp, conservativeKi, conservativeKd);
+        myPID.SetTunings(currentStatus.Settings.ConservativeKp, currentStatus.Settings.ConservativeKi, currentStatus.Settings.ConservativeKd);
     }
     else
     {
         //we're far from setpoint, use aggressive tuning parameters
-        myPID.SetTunings(aggressiveKp, aggressiveKi, aggressiveKd);
+        myPID.SetTunings(currentStatus.Settings.AggressiveKp, currentStatus.Settings.AggressiveKi, currentStatus.Settings.AggressiveKd);
     }
 
     bool newPidAvailable = myPID.Compute();

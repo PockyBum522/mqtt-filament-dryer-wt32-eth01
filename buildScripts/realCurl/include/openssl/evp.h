@@ -418,7 +418,7 @@ OSSL_DEPRECATEDIN_3_0 int
 # define         EVP_CTRL_BLOCK_PADDING_MODE             0x21
 
 /* Set the output buffers to use for a pipelined operation */
-# define         EVP_CTRL_SET_PIPELINE_OUTPUT_BUFS       0x22
+# define         EVP_CTRL_SET_PIPELINE_RELAY_BUFS       0x22
 /* Set the input buffers to use for a pipelined operation */
 # define         EVP_CTRL_SET_PIPELINE_INPUT_BUFS        0x23
 /* Set the input buffer lengths to use for a pipelined operation */

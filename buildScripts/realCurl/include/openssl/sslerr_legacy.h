@@ -124,7 +124,7 @@ OSSL_DEPRECATEDIN_3_0 int ERR_load_SSL_strings(void);
 #  define SSL_F_SSL3_GENERATE_MASTER_SECRET                0
 #  define SSL_F_SSL3_GET_RECORD                            0
 #  define SSL_F_SSL3_INIT_FINISHED_MAC                     0
-#  define SSL_F_SSL3_OUTPUT_CERT_CHAIN                     0
+#  define SSL_F_SSL3_RELAY_CERT_CHAIN                     0
 #  define SSL_F_SSL3_READ_BYTES                            0
 #  define SSL_F_SSL3_READ_N                                0
 #  define SSL_F_SSL3_SETUP_KEY_BLOCK                       0
