@@ -21,18 +21,25 @@
 
 4. Use a stopwatch to time the oscillation and record PV values:
 	a. Start the stopwatch when PV just passes the setpoint during a rise in the oscillation cycle.
-	b. When PV then peaks, record the maximum temperature value reached during the overshoot.
-	(PV will then drop (cool) and more heat will be applied after crossing the setpoint.)
+	b. When PV then peaks, record the maximum temperature value reached during the overshoot. (PV will then drop (cool) and more heat will be applied after crossing the setpoint.)
 	c. Record the minimum PV value reached at the bottom of the PV range during the cooldown. (Should be the lowest value in the cycle)
 	d. Stop the stopwatch just after PV passes the setpoint again, during PV rise.
 
 5. Calculate the gain (KP) by subtracting the minimum PV value from the maximum PV value and dividing the result by the setpoint. 
 	a. Express this value as a percentage and enter it as the KP value.
 
-6. Enter the total oscillation time (in seconds or minutes, it will depend on what your controller uses, which should be specified in the manual) and set it as the integral time (KI)
+6. Enter the total oscillation time (in seconds or minutes, it will depend on what your controller uses) and set it as the integral time (KI)
 
 7. Divide the KI value by 6 to determine the derivative time (KD). Divided by 6 is (usually) good for an oven. For other applications, use this as a starting point.
 
 8. Observe the system's response. If oscillation persists, increase the proportional gain. If the system reacts too quickly or does not recover from overshoot, decrease KD.
 
 Note: Avoid adjusting KI if it was accurately measured during a warmed-up state.
+
+
+
+
+
+ I usually set the proportional band (gain) to  zero, and set the setpoint a little below what I need so when it overshoots it wont hurt anything.  The temperature is going to oscillate at a specific frequency that is natural to the process.  If you know that frequency (time period for 1 cycle) and the temp extremes you have everything you need to enter PI and D values.  Get a stop watch, start it at the precise moment the heat turns off, on rise, just after PV passes the set point.  PV will overshoot and start to cool.  Note the max temperature.  Its going to cool and just after crossing the set point the heat will come back on.  The temperature will continue to drop, then bottom out at a certain value.  Note that min temperature.  The temperature will rise and just after it passes the set point the heat will turn off, stop the stopwatch at that precise moment.  You now have everything you need to dial it in on the first try.  Note the max and min temps (subtract the max from the min), what percentage is that value of the set point?  Enter that percentage for your gain (P).  The total time it took in seconds is the reset number (I or Ti).  Take that Ti number and divide it by 6 and that is the Td (D) value (a good starting point for an oven).  That is usually enough for everything to settle down to a nice flat line.  If it is still oscillating make the proportional band larger.  If it is too twitchy (reacts to quickly to changing input) or never quite recovers from an overshoot, lower the derivative.  If you use this method rarely is the I off because you can very accurately measure it.  Don't play with this number,  especially if you got it after the system was all warmed up.
+
+ https://www.youtube.com/watch?v=IB1Ir4oCP5k
