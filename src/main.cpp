@@ -76,7 +76,7 @@ void setup()
 
     webServer.on("/", HTTP_GET, [](AsyncWebServerRequest *request)
     {
-        request->send(200, "text/plain", "Hi! I am WT32_ETH01_Thermostat.");
+        request->send(200, "text/plain", "Hi! I am " + currentStatus.Settings.DeviceName);
     });
 
     AsyncElegantOTA.begin(&webServer);    // Start ElegantOTA

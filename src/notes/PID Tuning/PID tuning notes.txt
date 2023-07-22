@@ -1,15 +1,23 @@
-1.51 = temp range in oscillation (max - min)
-
-3.356% of 45 (setpoint was 45)
-
-3:50:03 (On rise at 45.02c)
-4:21:12 (On fall at 45.97c)
-4:49:33 (On next rise at 45.02c)
-
-(My KD is in minutes, so 3570 seconds = 59.5 for KD)
+kp = 0.6522%
+{
+    0.3 = temp range in oscillation (max - min)
+    0.6522% of 46 (setpoint was 46)
+}
 
 
+ki = 98.35
+{
+    4:39:24 (On rise at 46.02c)
+    5:34:00 (On fall at 45.97c)
+    6:17:45 (On next rise at 46.02c)
 
+    98.35 minutes
+}
+
+kd = 16.391
+{
+    ki / 6 = 16.391
+}
 
 
 
