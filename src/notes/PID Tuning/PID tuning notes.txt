@@ -21,7 +21,7 @@ kd = 16.391
 
 
 
-1. Set the proportional gain (KP) to zero.
+1. Set the proportional gain (KP) to zero. (?Ki = 0.001? ?Kd = 100?)
 
 2. Adjust the setpoint slightly below the desired value to account for potential overshoot.
 
